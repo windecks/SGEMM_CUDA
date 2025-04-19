@@ -32,8 +32,8 @@ KERNEL_NAMES = {
     9: "Autotuning",
     10: "Warptiling",
     11: "Double Buffering",
-    26: "INT8 (MMA)",
-    27: "INT8 (cuBLAS)",
+    13: "INT8 (MMA)",
+    14: "INT8 (cuBLAS)",
 }
 
 

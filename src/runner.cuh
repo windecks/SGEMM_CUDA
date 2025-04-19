@@ -57,6 +57,4 @@ void runCublasINT8(cublasHandle_t handle, int M, int N, int K, int32_t alpha,
                    int32_t *C); // directly expose this kernel
 void runSgemmIntTensorCoreMma(int M, int N, int K, int32_t alpha, int8_t *A,
                               int8_t *B, int32_t beta, int32_t *C);
-void runSgemmIntTensorCore(int M, int N, int K, int32_t alpha, int8_t *A,
-                           int8_t *B, int32_t beta, int32_t *C);
 void transposeInt8MatrixToDst(const int8_t *src, int8_t *dst, int N);

@@ -61,7 +61,7 @@ void CudaDeviceInfo() {
 void randomize_matrix(float *mat, int N) {
   // NOTICE: Use gettimeofday instead of srand((unsigned)time(NULL)); the time
   // precision is too low and the same random number is generated.
-  struct timeval time {};
+  struct timeval time{};
   gettimeofday(&time, nullptr);
   srand(time.tv_usec);
   for (int i = 0; i < N; i++) {
@@ -131,7 +131,7 @@ void initialize_one_int(int32_t *mat, int N) {
 void randomize_matrix_hf(__half *mat, int N) {
   // NOTICE: Use gettimeofday instead of srand((unsigned)time(NULL)); the time
   // precision is too low and the same random number is generated.
-  struct timeval time {};
+  struct timeval time{};
   gettimeofday(&time, nullptr);
   srand(time.tv_usec);
   for (int i = 0; i < N; i++) {
@@ -142,7 +142,7 @@ void randomize_matrix_hf(__half *mat, int N) {
 }
 
 void randomize_matrix_int8(int8_t *mat, int N) {
-  struct timeval time {};
+  struct timeval time{};
   gettimeofday(&time, nullptr);
   srand(time.tv_usec);
   for (int i = 0; i < N; i++) {
@@ -753,22 +753,15 @@ void runSgemmDoubleBuffering2(int M, int N, int K, float alpha, float *A,
       <<<gridDim, blockDim>>>(M, N, K, alpha, A, B, beta, C);
 }
 
-void runSgemmIntTensorCore(int M, int N, int K, int32_t alpha, int8_t *A,
-                           int8_t *B, int32_t beta, int32_t *C) {
-  dim3 blockDim(32, 1, 1); // A warp per block
-  dim3 gridDim(N / WMMA_N, M / WMMA_M, 1);
-  runSgemmIntPtxMma<BM, BN, BK><<<gridDim, blockDim>>>(A, B, C, M, N, K);
-}
-
 void runSgemmIntTensorCoreMma(int M, int N, int K, int32_t alpha, int8_t *A,
                               int8_t *B, int32_t beta, int32_t *C) {
-  const uint BK = 16;
-  const uint BM = 128;
-  const uint BN = 128;
-  dim3 gridDim(CEIL_DIV(N, BN), CEIL_DIV(M, BM));
-  dim3 blockDim((16 * BM * BN) / (WMMA_M * WMMA_N));
-  runSgemmIntPtxMma<BM, BN, BK>
-      <<<gridDim, blockDim>>>(M, N, K, alpha, A, B, beta, C);
+  dim3 threadsPerBlock(512);
+  constexpr int BLOCK_M = 128;
+  constexpr int BLOCK_N = 128;
+  constexpr int BLOCK_K = 128;
+  dim3 numBlocks((M + BLOCK_M - 1) / BLOCK_M, (N + BLOCK_N - 1) / BLOCK_N);
+  runSgemmIntPtxMma<<<numBlocks, threadsPerBlock>>>(M, N, K, alpha, A, B, beta,
+                                                    C);
 }
 
 void run_kernel(int kernel_num, int M, int N, int K, float alpha, float *A,
@@ -831,10 +824,6 @@ void run_tensor_core_kernel(int kernel_num, int M, int N, int K, float alpha,
     break;
   case 14:
     throw std::invalid_argument("cuBLAS INT8 gemm");
-  case 15:
-    throw std::invalid_argument(
-        "tensor_core_int_mma is run directly in sgemm.cu.");
-    break;
   default:
     throw std::invalid_argument("Unknown kernel number");
   }
