@@ -1,0 +1,19 @@
+build/
+cmake-build-debug/
+cmake-build-release/
+.idea/
+.cache/
+
+# VSCode, but include settings.json
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+
+# binaries
+cuBLAS_sgemm
+simplest
+
+# benchmark results
+benchmark_results/
+
+.cache
